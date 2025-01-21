@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import ComboBox from "../components/ComboBox";
-import SuccessMessage from "../components/SuccessMessage";
-import ErrorMessage from "../components/ErrorMessage";
+// import ComboBox from "../components/ComboBox";
+// import SuccessMessage from "./SuccesMessage";
+// import ErrorMessage from "../components/ErrorMessage";
 
 const ChooseTableComponent = ({ freeTables, reservation, onChosen }) => {
   const [payload, setPayload] = useState({ tableId: null });

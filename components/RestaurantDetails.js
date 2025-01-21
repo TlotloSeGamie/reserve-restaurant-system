@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import CalendarComponent from './CalenderCmponent';
 import SlotItem from './SlotItem';
+// import ChooseTableComponent from './ChooseTable'; // Import the new component
 
 const RestaurantDetails = ({ route, navigation }) => {
   const { restaurant } = route.params;
@@ -38,6 +39,13 @@ const RestaurantDetails = ({ route, navigation }) => {
         )}
         horizontal
       />
+
+      <Text style={styles.sectionTitle}>Choose a Table:</Text>  {/* Adding section title for tables */}
+      {/* <ChooseTableComponent 
+        freeTables={restaurant.tables} // Assuming `tables` is a list of available tables
+        reservation={selectedSlot}
+        onChosen={() => {}}
+      /> */}
 
       <TouchableOpacity style={styles.reserveButton} onPress={handleReservation}>
         <Text style={styles.reserveButtonText}>Confirm Reservation</Text>
