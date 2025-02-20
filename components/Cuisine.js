@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Button, Image } from "react-native";
 import { FontAwesome5, MaterialIcons, Ionicons } from "@expo/vector-icons";
+import RestaurantItem from "./RestaurantItem";
+
 
 const cuisines = [
   { id: 1, name: "Italian", icon: "pizza-slice", lib: FontAwesome5 },
@@ -45,83 +47,90 @@ const mockRestaurants = [
   { id: '25', name: 'Golden Olive', location: 'North Cape Mall', cuisine: 'Mediterranean', slots: ['12:00 PM', '3:00 PM', '8:00 PM'], image: require('../assets/images/restaurant-in.jpeg') },
 ];
 
-  const Cuisine = () => {
-    const [selectedCuisine, setSelectedCuisine] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false);
-  
-    const handleCuisineSelect = (cuisineName) => {
-      const filteredRestaurants = mockRestaurants.filter(
-        (restaurant) => restaurant.cuisine.toLowerCase() === cuisineName.toLowerCase()
-      );
-      setSelectedCuisine({ name: cuisineName, restaurants: filteredRestaurants });
-      setModalVisible(true);
-    };
-  
-    const renderCuisine = ({ item }) => {
-      const IconComponent = item.lib;
-  
-      return (
-        <TouchableOpacity style={styles.cuisineItem} onPress={() => handleCuisineSelect(item.name)}>
-          <IconComponent name={item.icon} size={30} color="#4A90E2" />
-          <Text style={styles.cuisineText}>{item.name}</Text>
-        </TouchableOpacity>
-      );
-    };
-  
+const Cuisine = ({ navigation }) => {
+  const [selectedCuisine, setSelectedCuisine] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleCuisineSelect = (cuisineName) => {
+    const filteredRestaurants = mockRestaurants.filter(
+      (restaurant) => restaurant.cuisine.toLowerCase() === cuisineName.toLowerCase()
+    );
+    setSelectedCuisine({ name: cuisineName, restaurants: filteredRestaurants });
+    setModalVisible(true);
+  };
+
+  const handleRestaurantSelect = (restaurant) => {
+    setModalVisible(false);
+    navigation.navigate('RestaurantDetails', { restaurant });
+  };
+
+  const renderCuisine = ({ item }) => {
+    const IconComponent = item.lib;
+
     return (
-      <View style={styles.container}>
-        <Text style={styles.heading}>Explore Cuisines</Text>
-        <FlatList
-          data={cuisines}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderCuisine}
-          numColumns={3}
-          contentContainerStyle={styles.list}
-        />
-        {selectedCuisine && (
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>{selectedCuisine.name} Restaurants</Text>
-                {selectedCuisine.restaurants.length > 0 ? (
-                  selectedCuisine.restaurants.map((restaurant) => (
-                    <TouchableOpacity
-                      key={restaurant.id}
-                      style={styles.restaurantItem}
-                      onPress={() => alert(`You selected ${restaurant.name}`)}
-                    >
-                      {restaurant.image && (
-                        <Image
-                          source={restaurant.image}
-                          style={styles.restaurantImage}
-                          resizeMode="cover"
-                        />
-                      )}
-                      <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                      <Text style={styles.restaurantLocation}>{restaurant.location}</Text>
-                      <Text style={styles.restaurantCuisine}>Cuisine: {restaurant.cuisine}</Text>
-                      <Text style={styles.restaurantSlots}>
-                        Slots: {restaurant.slots.join(", ")}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <Text style={styles.noResults}>No restaurants found for this cuisine.</Text>
-                )}
-                <Button title="Close" onPress={() => setModalVisible(false)} />
-              </View>
-            </View>
-          </Modal>
-        )}
-      </View>
+      <TouchableOpacity style={styles.cuisineItem} onPress={() => handleCuisineSelect(item.name)}>
+        <IconComponent name={item.icon} size={30} color="#4A90E2" />
+        <Text style={styles.cuisineText}>{item.name}</Text>
+      </TouchableOpacity>
     );
   };
-  
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.heading}>Explore Cuisines</Text>
+      <FlatList
+        data={cuisines}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderCuisine}
+        numColumns={3}
+        contentContainerStyle={styles.list}
+      />
+      {selectedCuisine && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(false);
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedCuisine.name} Restaurants</Text>
+              {selectedCuisine.restaurants.length > 0 ? (
+                selectedCuisine.restaurants.map((restaurant) => (
+                  <TouchableOpacity
+                    key={restaurant.id}
+                    style={styles.restaurantItem}
+                    onPress={() => handleRestaurantSelect(restaurant)}
+                  >
+                    {restaurant.image && (
+                      <Image
+                        source={restaurant.image}
+                        style={styles.restaurantImage}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                    <Text style={styles.restaurantLocation}>{restaurant.location}</Text>
+                    <Text style={styles.restaurantCuisine}>Cuisine: {restaurant.cuisine}</Text>
+                    <Text style={styles.restaurantSlots}>
+                      Slots: {restaurant.slots.join(", ")}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={styles.noResults}>No restaurants found for this cuisine.</Text>
+              )}
+              <Button title="Close" onPress={() => setModalVisible(false)} />
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+};
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,

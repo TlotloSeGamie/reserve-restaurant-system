@@ -1,136 +1,177 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigation = useNavigation();
-  const [users, setUsers] = useState([
-    { email: "user1@example.com", password: "password123", name: "User One" },
-    // Add more sample users if needed
-  ]);
+export default function Login({ navigation }) {
+  const { control, handleSubmit, formState: { errors } } = useForm();
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const handleSubmit = () => {
-    const user = users.find(
-      (user) => user.email === email && user.password === password
-    );
-    if (!user) {
-      Alert.alert("Error", "Invalid email or password");
-      return;
+  const onLogin = async (data) => {
+    try {
+      const userDetails = await AsyncStorage.getItem('userDetails');
+      
+      if (!userDetails) {
+        Alert.alert('Login Failed', 'No user found. Please sign up.');
+        return;
+      }
+      
+      const parsedUserDetails = JSON.parse(userDetails);
+  
+      if (data.email === parsedUserDetails.email && data.password === parsedUserDetails.password) {
+        Alert.alert('Login Successful', `Welcome back, ${parsedUserDetails.firstName}!`);
+      } else {
+        Alert.alert('Login Failed', 'Invalid email or password.');
+      }
+    } catch (error) {
+      console.error("Error retrieving data: ", error);
     }
-
-    Alert.alert("Success", `Welcome back, ${user.name}!`, [
-      { text: "OK", onPress: () => navigation.navigate("Items") },
-    ]);
   };
-
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <View style={styles.formGroup}>
+      <Text style={styles.title}>Welcome</Text>
+
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter your email"
-          keyboardType="email-address"
+        <Controller
+          control={control}
+          name="email"
+          rules={{
+            required: 'Email is required',
+            pattern: { value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, message: 'Enter a valid email' },
+          }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[styles.input, errors.email && styles.errorInput]}
+              placeholder="Enter your email"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              keyboardType="email-address"
+            />
+          )}
         />
+        {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
       </View>
-      <View style={styles.formGroup}>
+
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter your password"
-          secureTextEntry
+        <Controller
+          control={control}
+          name="password"
+          rules={{
+            required: 'Password is required',
+            minLength: { value: 6, message: 'Password must be at least 6 characters long' },
+          }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, errors.password && styles.errorInput, { flex: 1 }]}
+                placeholder="Enter your password"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                secureTextEntry={!passwordVisible}
+              />
+              <TouchableOpacity
+                onPress={() => setPasswordVisible(!passwordVisible)}
+                style={styles.toggleButton}
+              >
+                <Text style={styles.toggleButtonText}>
+                  {passwordVisible ? 'Hide' : 'Show'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         />
+        {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
       </View>
-      <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-        <Text style={styles.loginButtonText}>Login</Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleSubmit(onLogin)}>
+        <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
-      <View style={styles.formGroup}>
-        <Text style={styles.smallText}>
-          Don't have an account?{" "}
-          <TouchableOpacity onPress={() => navigation.replace("SignUp")}>
-            <Text style={styles.registerLink}>Sign Up here</Text>
-          </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.linkContainer}>
+        <Text style={styles.linkText}>
+          Don't have an account? <Text style={styles.link}>Sign Up</Text>
         </Text>
-      </View>
+      </TouchableOpacity>W
     </View>
   );
-};
-
-export default Login;
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 40,
-    backgroundColor: "#f0f0f0",
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 20,
+    backgroundColor: 'rgb(190, 193, 194)',
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#2f4f4f",
-    textAlign: "center",
-    backgroundColor: "#d3d3d3",
-    padding: 20,
-    borderRadius: 10,
-    elevation: 3,
-    marginBottom: 20,
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 40,
+    color: 'rgb(51, 51, 51)',
   },
-  formGroup: {
-    width: "100%",
+  inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#2f4f4f",
+    color: 'rgb(120, 120, 120)',
     marginBottom: 5,
   },
   input: {
-    width: "100%",
-    padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    borderColor: 'rgb(190, 193, 194)',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
-    color: "#2f4f4f",
+    backgroundColor: '#fff',
   },
-  loginButton: {
-    backgroundColor: "#4682b4",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    width: "100%",
-    alignItems: "center",
+  errorInput: {
+    borderColor: 'rgb(8, 46, 12)',
   },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  smallText: {
-    color: "red",
+  errorText: {
+    color: 'rgb(8, 46, 12)',
     fontSize: 14,
-    textAlign: "center",
+    marginTop: 5,
   },
-  registerLink: {
-    color: "#4682b4",
-    fontWeight: "bold",
-    textDecorationLine: "underline",
+  button: {
+    backgroundColor: 'rgb(89, 112, 194)',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  linkContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: 'rgb(120, 120, 120)',
+  },
+  link: {
+    color: 'rgb(44, 71, 169)',
+    fontWeight: 'bold',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleButton: {
+    marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toggleButtonText: {
+    color: 'rgb(44, 71, 169)',
+    fontWeight: 'bold',
   },
 });

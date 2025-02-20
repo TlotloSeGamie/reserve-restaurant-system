@@ -1,155 +1,299 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
+  StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
+  CheckBox,
+  Modal,
+  ScrollView,
+} from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import SweetAlert from 'react-native-sweet-alert';
+import TermsAndConditions from './Terms&Condition';
 
-const SignUp = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const navigation = useNavigation();
-  const [users, setUsers] = useState([]);
+export default function SignUp({ navigation }) {
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
-  const handleSubmit = () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "All fields are required");
-      return;
+  const [isChecked, setIsChecked] = useState(false); // State for checkbox
+  const [isModalVisible, setIsModalVisible] = useState(false); // State for Terms & Conditions modal
+  const [passwordVisible, setPasswordVisible] = useState(false); // State for password visibility
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // State for confirm password visibility
+  const password = watch("password"); // Watch password to validate confirmPassword
+
+  // Simulate a database of registered emails
+  const registeredEmails = ["test@example.com", "user@domain.com"];
+
+  const onSubmit = (data) => {
+    if (registeredEmails.includes(data.email)) {
+      console.log('This email is already registered!');
+    } else {
+      registeredEmails.push(data.email); // Simulate registration
+      console.log(`Welcome, ${data.firstName}! You have registered successfully.`);
+      navigation.navigate('Login'); // Navigate to Login page
     }
-
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
-      return;
-    }
-
-    if (users.some((user) => user.email === email)) {
-      Alert.alert("Error", "Email already registered");
-      return;
-    }
-
-    const newUser = { name, email, password };
-    setUsers([...users, newUser]);
-
-    Alert.alert("Success", "User registered successfully!", [
-      { text: "OK", onPress: () => navigation.navigate("Login") },
-    ]);
   };
-
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Sign Up</Text>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter your name"
+      <Text style={styles.title}>Create Account</Text>
+
+      {/* Input Fields */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>First Name</Text>
+        <Controller
+          control={control}
+          name="firstName"
+          rules={{ required: 'First name is required' }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[styles.input, errors.firstName && styles.errorInput]}
+              placeholder="Enter your first name"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
         />
+        {errors.firstName && <Text style={styles.errorText}>{errors.firstName.message}</Text>}
       </View>
-      <View style={styles.formGroup}>
+
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter your email"
-          keyboardType="email-address"
+        <Controller
+          control={control}
+          name="email"
+          rules={{
+            required: 'Email is required',
+            pattern: { value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, message: 'Enter a valid email' },
+          }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[styles.input, errors.email && styles.errorInput]}
+              placeholder="Enter your email"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              keyboardType="email-address"
+            />
+          )}
         />
+        {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
       </View>
-      <View style={styles.formGroup}>
+
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter your password"
-          secureTextEntry
+        <Controller
+          control={control}
+          name="password"
+          rules={{
+            required: 'Password is required',
+            pattern: {
+              value: /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+              message: 'Password must be at least 8 characters, include an uppercase letter, number, and special character',
+            },
+          }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, errors.password && styles.errorInput, { flex: 1 }]}
+                placeholder="Enter your password"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                secureTextEntry={!passwordVisible}
+              />
+              <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+                <Text style={styles.toggleButtonText}>
+                  {passwordVisible ? 'Hide' : 'Show'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         />
+        {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
       </View>
-      <View style={styles.formGroup}>
+
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Confirm Password</Text>
-        <TextInput
-          style={styles.input}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="Confirm your password"
-          secureTextEntry
+        <Controller
+          control={control}
+          name="confirmPassword"
+          rules={{
+            required: 'Please confirm your password',
+            validate: (value) => value === password || 'Passwords do not match',
+          }}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, errors.confirmPassword && styles.errorInput, { flex: 1 }]}
+                placeholder="Re-enter your password"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                secureTextEntry={!confirmPasswordVisible}
+              />
+              <TouchableOpacity onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}>
+                <Text style={styles.toggleButtonText}>
+                  {confirmPasswordVisible ? 'Hide' : 'Show'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         />
+        {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+
+      {/* Terms & Conditions Checkbox */}
+      <View style={styles.checkboxContainer}>
+        <CheckBox
+          value={isChecked}
+          onValueChange={setIsChecked}
+          style={styles.checkbox}
+        />
+        <Text style={styles.checkboxLabel}>
+          I read the{' '}
+          <Text style={styles.link} onPress={() => setIsModalVisible(true)}>
+            Terms & Conditions
+          </Text>
+        </Text>
+      </View>
+
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={[styles.button, !isChecked && styles.buttonDisabled]}
+        onPress={handleSubmit(onSubmit)}
+        disabled={!isChecked}
+      >
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-      <Text style={styles.smallText}>
-        Already have an account?{" "}
-        <Text style={styles.link} onPress={() => navigation.navigate("Login")}>
-          Login here
-        </Text>
-      </Text>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.linkContainer}>
+        <Text style={styles.linkText}>Already have an account? <Text style={styles.link}>Login</Text></Text>
+      </TouchableOpacity>
+
+      {/* Terms & Conditions Modal */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+          <TouchableOpacity
+            onPress={() => setIsModalVisible(false)}
+            style={{ padding: 15, alignSelf: 'flex-end' }}
+          >
+            <Text style={{ fontSize: 18, color: 'rgb(24, 48, 135)' }}>Close</Text>
+          </TouchableOpacity>
+          <ScrollView contentContainerStyle={{ padding: 20 }}>
+            <TermsAndConditions />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    padding: 20,
+    backgroundColor: 'rgb(190, 193, 194)',
   },
-  header: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2f4f4f",
-    marginBottom: 30,
-    textAlign: "center",
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 40,
+    color: 'rgb(51, 51, 51)',
   },
-  formGroup: {
-    width: "100%",
+  inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#2f4f4f",
+    color: 'rgb(120, 120, 120)',
     marginBottom: 5,
   },
   input: {
-    width: "100%",
-    padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    borderColor: 'rgb(190, 193, 194)',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  errorInput: {
+    borderColor: 'rgb(8, 46, 12)',
+  },
+  errorText: {
+    color: 'rgb(8, 46, 12)',
+    fontSize: 14,
+    marginTop: 5,
   },
   button: {
-    backgroundColor: "#4682b4",
+    backgroundColor: 'rgb(89, 112, 194)',
     padding: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    width: "100%",
-    marginTop: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: 'rgb(120, 120, 120)',
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    marginRight: 10,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: 'rgb(120, 120, 120)',
+  },
+  link: {
+    color: 'rgb(44, 71, 169)',
+    fontWeight: 'bold',
+  },
+  linkContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: 'rgb(120, 120, 120)',
+  },
+  closeButton: {
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    margin: 20,
+    alignSelf: "center",
+  },
+  closeButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },
-  smallText: {
-    marginTop: 10,
-    color: "#2f4f4f",
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  link: {
-    color: "#4682b4",
-    fontWeight: "bold",
-    textDecorationLine: "underline",
+  toggleButtonText: {
+    color: 'rgb(44, 71, 169)',
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
 });
-
-export default SignUp;

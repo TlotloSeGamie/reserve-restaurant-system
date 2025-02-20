@@ -6,12 +6,12 @@ import Footer from '../Footer';
 const AdminDashboard = ({ navigation }) => {
   const features = [
     { name: 'View Nearby Restaurants', icon: 'location-on', screen: 'NearbyRestaurants' },
-    { name: 'Add Restaurant', icon: 'add-business', screen: 'AddRestaurant' },
-    { name: 'View Users', icon: 'people', screen: 'ViewUsers' },
-    { name: 'Added Restaurants', icon: 'restaurant-menu', screen: 'AddedRestaurants' },
-    { name: 'Reservations', icon: 'event', screen: 'Reservations' },
+    // { name: 'Add Restaurant', icon: 'add-business', screen: 'AddRestaurant' },
+    // { name: 'View Users', icon: 'people', screen: 'ViewUsers' },
+    // { name: 'Added Restaurants', icon: 'restaurant-menu', screen: 'AddedRestaurants' },
+    // { name: 'Reservations', icon: 'event', screen: 'Reservations' },
     { name: 'Admin Profile', icon: 'person', screen: 'AdminProfile' },
-    { name: 'Settings', icon: 'settings', screen: 'Settings' },
+    // { name: 'Settings', icon: 'settings', screen: 'Settings' },
   ];
 
   return (

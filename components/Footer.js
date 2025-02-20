@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity, StyleSheet, Text, Modal } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Import the hook
+import { useNavigation } from "@react-navigation/native"; 
 import { FontAwesome, FontAwesome5, Entypo, Ionicons } from "@expo/vector-icons";
 import Cuisine from "./Cuisine";
+import Login from "./Login"; // Import the Login component
 
 const Footer = ({ activeTab }) => {
-  const navigation = useNavigation(); // Use the hook to access navigation
+  const navigation = useNavigation(); 
   const [showCuisineModal, setShowCuisineModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false); // State for Login modal
 
   const menuItems = [
     { label: "Home", icon: "home", route: "Home", lib: FontAwesome },
     { label: "Cuisines", icon: "concierge-bell", route: "FineDining", lib: FontAwesome5 },
-    { label: "Explore", icon: "search", route: "Explore", lib: FontAwesome },
+    { label: "Explore", icon: "search", route: "Home", lib: FontAwesome },
     { label: "Reservations", icon: "bowl", route: "Reservations", lib: Entypo },
-    { label: "Profile", icon: "person-outline", route: "Profile", lib: Ionicons },
+    {label: "Login", icon: "log-in-outline",  route: "Login", lib: Ionicons}
   ];
 
   const handlePress = (item) => {
@@ -21,6 +23,8 @@ const Footer = ({ activeTab }) => {
       navigation.navigate("Home");
     } else if (item.label === "Cuisines") {
       setShowCuisineModal(true);
+    } else if (item.label === "Login") {
+      setShowLoginModal(true); // Show the Login modal
     } else {
       navigation.navigate(item.route);
     }
@@ -61,6 +65,24 @@ const Footer = ({ activeTab }) => {
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setShowCuisineModal(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Login Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showLoginModal}
+        onRequestClose={() => setShowLoginModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Login />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowLoginModal(false)}
           >
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
