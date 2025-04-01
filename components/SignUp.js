@@ -5,13 +5,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  CheckBox,
   Modal,
   ScrollView,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import SweetAlert from 'react-native-sweet-alert';
 import TermsAndConditions from './Terms&Condition';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function SignUp({ navigation }) {
   const {
@@ -21,22 +21,32 @@ export default function SignUp({ navigation }) {
     formState: { errors },
   } = useForm();
 
-  const [isChecked, setIsChecked] = useState(false); // State for checkbox
   const [isModalVisible, setIsModalVisible] = useState(false); // State for Terms & Conditions modal
   const [passwordVisible, setPasswordVisible] = useState(false); // State for password visibility
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // State for confirm password visibility
   const password = watch("password"); // Watch password to validate confirmPassword
 
-  // Simulate a database of registered emails
   const registeredEmails = ["test@example.com", "user@domain.com"];
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (registeredEmails.includes(data.email)) {
       console.log('This email is already registered!');
     } else {
       registeredEmails.push(data.email); // Simulate registration
       console.log(`Welcome, ${data.firstName}! You have registered successfully.`);
-      navigation.navigate('Login'); // Navigate to Login page
+  
+      // Save user details to AsyncStorage
+      try {
+        const userDetails = {
+          firstName: data.firstName,
+          email: data.email,
+          password: data.password,
+        };
+        await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)); // Save to AsyncStorage
+        navigation.navigate('Login'); // Navigate to Login page
+      } catch (error) {
+        console.error('Error saving user details:', error);
+      }
     }
   };
   
@@ -150,26 +160,10 @@ export default function SignUp({ navigation }) {
         {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
       </View>
 
-      {/* Terms & Conditions Checkbox */}
-      <View style={styles.checkboxContainer}>
-        <CheckBox
-          value={isChecked}
-          onValueChange={setIsChecked}
-          style={styles.checkbox}
-        />
-        <Text style={styles.checkboxLabel}>
-          I read the{' '}
-          <Text style={styles.link} onPress={() => setIsModalVisible(true)}>
-            Terms & Conditions
-          </Text>
-        </Text>
-      </View>
-
       {/* Submit Button */}
       <TouchableOpacity
-        style={[styles.button, !isChecked && styles.buttonDisabled]}
+        style={styles.button}
         onPress={handleSubmit(onSubmit)}
-        disabled={!isChecked}
       >
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
@@ -243,28 +237,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonDisabled: {
-    backgroundColor: 'rgb(120, 120, 120)',
-  },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  checkbox: {
-    marginRight: 10,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: 'rgb(120, 120, 120)',
-  },
-  link: {
-    color: 'rgb(44, 71, 169)',
     fontWeight: 'bold',
   },
   linkContainer: {
@@ -275,17 +250,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgb(120, 120, 120)',
   },
-  closeButton: {
-    backgroundColor: "#007BFF",
-    padding: 10,
-    borderRadius: 5,
-    margin: 20,
-    alignSelf: "center",
-  },
-  closeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
+  link: {
+    color: 'rgb(44, 71, 169)',
+    fontWeight: 'bold',
   },
   passwordContainer: {
     flexDirection: 'row',

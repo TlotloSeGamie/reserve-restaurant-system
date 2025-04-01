@@ -2,33 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Profile = ({ onClose }) => {
-    const [user, setUser] = useState({ name: '', email: '', cellphone: '', profileImage: null });
     const [profileImage, setProfileImage] = useState(null);
     const [showButtons, setShowButtons] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [formValues, setFormValues] = useState({ name: '', email: '', cellphone: '' });
     const navigation = useNavigation();
     const [loggedOut, setLoggedOut] = useState(false);
+    const [user, setUser] = useState({});
 
     useEffect(() => {
-        const storedUserEmail = ''; // Replace with AsyncStorage retrieval logic
-        const users = []; // Replace with AsyncStorage retrieval logic
+        const fetchUserDetails = async () => {
+            try {
+                const userDetails = await AsyncStorage.getItem('userDetails');
+                if (userDetails) {
+                    const parsedUser = JSON.parse(userDetails);
+                    setUser(parsedUser);
+                    setProfileImage(parsedUser.profileImage || null);
+                }
+            } catch (error) {
+                console.error("Error retrieving user details:", error);
+            }
+        };
 
-        const localStorageUser = users.find((u) => u.email === storedUserEmail);
-
-        if (localStorageUser) {
-            const currentUser = localStorageUser;
-            setUser(currentUser);
-            setProfileImage(currentUser.profileImage || null);
-            setFormValues({ ...currentUser, cellphone: currentUser.cellphone || '' });
-        } else if (!loggedOut) {
-            Alert.alert('Not Logged In', 'You must be logged in to view your profile.', [
-                { text: 'OK', onPress: () => navigation.navigate('Login') },
-            ]);
-        }
-    }, [loggedOut, navigation]);
+        fetchUserDetails();
+    }, []);
 
     const handleLogout = () => {
         Alert.alert(
@@ -64,19 +64,18 @@ const Profile = ({ onClose }) => {
 
         if (!result.canceled) {
             const newProfileImage = result.uri;
-
             setProfileImage(newProfileImage);
             setShowButtons(false);
 
             const updatedUser = { ...user, profileImage: newProfileImage };
             setUser(updatedUser);
+            await AsyncStorage.setItem('userDetails', JSON.stringify(updatedUser));
 
-            // Replace with AsyncStorage update logic
             Alert.alert('Image Updated', 'Your profile image has been updated.');
         }
     };
 
-    const removeImage = () => {
+    const removeImage = async () => {
         Alert.alert(
             'Remove Photo',
             'Are you sure you want to remove your profile picture?',
@@ -85,14 +84,14 @@ const Profile = ({ onClose }) => {
                 {
                     text: 'Remove',
                     style: 'destructive',
-                    onPress: () => {
+                    onPress: async () => {
                         setProfileImage(null);
                         setShowButtons(false);
 
                         const updatedUser = { ...user, profileImage: null };
                         setUser(updatedUser);
+                        await AsyncStorage.setItem('userDetails', JSON.stringify(updatedUser));
 
-                        // Replace with AsyncStorage update logic
                         Alert.alert('Image Removed', 'Your profile picture has been removed.');
                     },
                 },
@@ -124,13 +123,13 @@ const Profile = ({ onClose }) => {
         return true;
     };
 
-    const handleFormSubmit = () => {
+    const handleFormSubmit = async () => {
         if (!validateForm()) return;
 
         const updatedUser = { ...formValues, profileImage };
         setUser(updatedUser);
+        await AsyncStorage.setItem('userDetails', JSON.stringify(updatedUser));
 
-        // Replace with AsyncStorage update logic
         setIsEditing(false);
         Alert.alert('Profile Updated', 'Your profile has been updated successfully.');
     };
@@ -166,8 +165,8 @@ const Profile = ({ onClose }) => {
                         </View>
                     )}
                     <View style={styles.details}>
-                        <Text><Text style={styles.label}>Username:</Text> {user.name}</Text>
-                        <Text><Text style={styles.label}>Email:</Text> {user.email}</Text>
+                        <Text><Text style={styles.label}>Username:</Text> {user.firstName || 'N/A'}</Text>
+                        <Text><Text style={styles.label}>Email:</Text> {user.email || 'N/A'}</Text>
                         {user.cellphone && <Text><Text style={styles.label}>Cellphone:</Text> {user.cellphone}</Text>}
                     </View>
                     <Button title="Log Out" onPress={handleLogout} color="red" />
@@ -224,39 +223,6 @@ const styles = StyleSheet.create({
     },
     editButtonText: {
         color: '#fff',
-    },
-    imageContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    profileImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-    },
-    defaultProfileIcon: {
-        fontSize: 100,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 10,
-    },
-    details: {
-        marginBottom: 20,
-    },
-    label: {
-        fontWeight: 'bold',
-    },
-    form: {
-        marginTop: 20,
-    },
-    input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-        marginBottom: 15,
-        fontSize: 16,
-        padding: 10,
     },
 });
 

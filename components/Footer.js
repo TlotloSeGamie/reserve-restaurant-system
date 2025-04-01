@@ -1,30 +1,36 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet, Text, Modal } from "react-native";
-import { useNavigation } from "@react-navigation/native"; 
-import { FontAwesome, FontAwesome5, Entypo, Ionicons } from "@expo/vector-icons";
-import Cuisine from "./Cuisine";
-import Login from "./Login"; // Import the Login component
+import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { FontAwesome, Entypo, Ionicons } from "@expo/vector-icons"; // ✅ Removed FontAwesome5 (no longer needed)
 
-const Footer = ({ activeTab }) => {
-  const navigation = useNavigation(); 
-  const [showCuisineModal, setShowCuisineModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false); // State for Login modal
+const Footer = () => {
+  const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState("Home"); // ✅ Set default active tab as "Home"
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ Track login state
 
   const menuItems = [
     { label: "Home", icon: "home", route: "Home", lib: FontAwesome },
-    { label: "Cuisines", icon: "concierge-bell", route: "FineDining", lib: FontAwesome5 },
-    { label: "Explore", icon: "search", route: "Home", lib: FontAwesome },
+    { label: "Cuisine", icon: "cutlery", route: "Cuisine", lib: FontAwesome },
     { label: "Reservations", icon: "bowl", route: "Reservations", lib: Entypo },
-    {label: "Login", icon: "log-in-outline",  route: "Login", lib: Ionicons}
+    { label: "Settings", icon: "settings-outline", route: "Settings", lib: Ionicons },
+    {
+      label: isLoggedIn ? "Profile" : "Login",
+      icon: isLoggedIn ? "person-circle-outline" : "log-in-outline",
+      route: isLoggedIn ? "Profile" : "Login",
+      lib: Ionicons,
+    },
   ];
 
   const handlePress = (item) => {
-    if (item.label === "Home") {
-      navigation.navigate("Home");
-    } else if (item.label === "Cuisines") {
-      setShowCuisineModal(true);
-    } else if (item.label === "Login") {
-      setShowLoginModal(true); // Show the Login modal
+    setActiveTab(item.route);
+
+    if (item.route === "Login") {
+      // Simulating successful login
+      setIsLoggedIn(true);
+      navigation.navigate("Login");
+    } else if (item.route === "Profile") {
+      // ✅ Now correctly navigates to Profile screen
+      navigation.navigate("Profile");
     } else {
       navigation.navigate(item.route);
     }
@@ -53,41 +59,6 @@ const Footer = ({ activeTab }) => {
           </TouchableOpacity>
         );
       })}
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showCuisineModal}
-        onRequestClose={() => setShowCuisineModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <Cuisine onCuisineSelect={() => setShowCuisineModal(false)} />
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowCuisineModal(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      {/* Login Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showLoginModal}
-        onRequestClose={() => setShowLoginModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <Login />
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowLoginModal(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -98,7 +69,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     paddingVertical: 15,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: "#1e272e",
     borderTopWidth: 1,
     borderTopColor: "#E5E5E5",
     shadowColor: "#000",
@@ -111,37 +82,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
+    transition: "all 0.3s ease-in-out",
   },
   activeMenuItem: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: "#007BFF",
+    transform: [{ scale: 1.1 }],
   },
   menuText: {
     marginTop: 5,
-    fontSize: 12,
+    fontSize: 8,
     color: "#B0B0B0",
-    fontFamily: "Roboto-Regular",
+    // fontFamily: "Roboto-Regular",
   },
   activeMenuText: {
     color: "#007BFF",
     fontWeight: "bold",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  closeButton: {
-    backgroundColor: "#007BFF",
-    padding: 10,
-    borderRadius: 5,
-    margin: 20,
-    alignSelf: "center",
-  },
-  closeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
   },
 });
 

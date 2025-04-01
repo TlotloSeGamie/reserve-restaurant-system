@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Button, Image } from "react-native";
 import { FontAwesome5, MaterialIcons, Ionicons } from "@expo/vector-icons";
-import RestaurantItem from "./RestaurantItem";
 
 
 const cuisines = [
@@ -61,7 +60,7 @@ const Cuisine = ({ navigation }) => {
 
   const handleRestaurantSelect = (restaurant) => {
     setModalVisible(false);
-    navigation.navigate('RestaurantDetails', { restaurant });
+    navigation.navigate('Booking', { restaurant });
   };
 
   const renderCuisine = ({ item }) => {
