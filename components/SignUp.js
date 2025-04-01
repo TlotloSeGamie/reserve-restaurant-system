@@ -21,10 +21,10 @@ export default function SignUp({ navigation }) {
     formState: { errors },
   } = useForm();
 
-  const [isModalVisible, setIsModalVisible] = useState(false); // State for Terms & Conditions modal
-  const [passwordVisible, setPasswordVisible] = useState(false); // State for password visibility
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // State for confirm password visibility
-  const password = watch("password"); // Watch password to validate confirmPassword
+  const [isModalVisible, setIsModalVisible] = useState(false); 
+  const [passwordVisible, setPasswordVisible] = useState(false); 
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); 
+  const password = watch("password"); 
 
   const registeredEmails = ["test@example.com", "user@domain.com"];
 
@@ -32,18 +32,17 @@ export default function SignUp({ navigation }) {
     if (registeredEmails.includes(data.email)) {
       console.log('This email is already registered!');
     } else {
-      registeredEmails.push(data.email); // Simulate registration
+      registeredEmails.push(data.email);
       console.log(`Welcome, ${data.firstName}! You have registered successfully.`);
   
-      // Save user details to AsyncStorage
       try {
         const userDetails = {
           firstName: data.firstName,
           email: data.email,
           password: data.password,
         };
-        await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)); // Save to AsyncStorage
-        navigation.navigate('Login'); // Navigate to Login page
+        await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)); 
+        navigation.navigate('Login'); 
       } catch (error) {
         console.error('Error saving user details:', error);
       }
@@ -54,7 +53,6 @@ export default function SignUp({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
 
-      {/* Input Fields */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>First Name</Text>
         <Controller
@@ -160,7 +158,6 @@ export default function SignUp({ navigation }) {
         {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
       </View>
 
-      {/* Submit Button */}
       <TouchableOpacity
         style={styles.button}
         onPress={handleSubmit(onSubmit)}
@@ -172,7 +169,6 @@ export default function SignUp({ navigation }) {
         <Text style={styles.linkText}>Already have an account? <Text style={styles.link}>Login</Text></Text>
       </TouchableOpacity>
 
-      {/* Terms & Conditions Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"

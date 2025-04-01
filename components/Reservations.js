@@ -1,15 +1,29 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Animated } from "react-native";
-import DatePicker from "react-native-date-picker";
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, Animated } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Reservations = () => {
-  const [date, setDate] = useState(new Date());
-  const [open, setOpen] = useState(false);
-  const [reservations, setReservations] = useState([
-    { id: "1", name: "Deluxe Suite", time: "7:00 PM", status: "Confirmed" },
-    { id: "2", name: "Ocean View Room", time: "5:30 PM", status: "Pending" },
-    { id: "3", name: "VIP Lounge", time: "9:00 PM", status: "Confirmed" },
-  ]);
+  const [reservations, setReservations] = useState([]);
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const userDetails = await AsyncStorage.getItem("userDetails");
+        if (!userDetails) return;
+
+        const { email } = JSON.parse(userDetails);
+        const storedReservations = await AsyncStorage.getItem(`bookings_${email}`);
+
+        if (storedReservations) {
+          setReservations(JSON.parse(storedReservations));
+        }
+      } catch (error) {
+        console.error("Error fetching reservations:", error);
+      }
+    };
+
+    fetchReservations();
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -28,29 +42,16 @@ const Reservations = () => {
     <View style={styles.container}>
       <Text style={styles.header}>Your Reservations</Text>
 
-      <TouchableOpacity style={styles.dateButton} onPress={() => setOpen(true)}>
-        <Text style={styles.dateText}>Select Date</Text>
-      </TouchableOpacity>
-
-      <DatePicker
-        modal
-        open={open}
-        date={date}
-        onConfirm={(date) => {
-          setOpen(false);
-          setDate(date);
-        }}
-        onCancel={() => setOpen(false)}
-      />
-
       <FlatList
         data={reservations}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <Animated.View style={[styles.card, { borderLeftColor: getStatusColor(item.status) }]}>
-            <Text style={styles.roomName}>{item.name}</Text>
-            <Text style={styles.time}>{item.time}</Text>
-            <Text style={[styles.status, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+          <Animated.View style={[styles.card, { borderLeftColor: getStatusColor(item.status || "Confirmed") }]}>
+            <Text style={styles.roomName}>{item.restaurant.name}</Text>
+            <Text style={styles.time}>{new Date(item.date).toDateString()} - {item.selectedSlot}</Text>
+            <Text style={[styles.status, { color: getStatusColor(item.status || "Confirmed") }]}>
+              {item.status || "Confirmed"}
+            </Text>
           </Animated.View>
         )}
       />
@@ -69,18 +70,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-  },
-  dateButton: {
-    backgroundColor: "#6200EE",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dateText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   card: {
     backgroundColor: "#fff",

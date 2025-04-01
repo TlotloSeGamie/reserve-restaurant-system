@@ -1,12 +1,39 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BookingSuccess = ({ route, navigation }) => {
-  const params = route.params || {}; // Ensure route.params is not undefined
+  const params = route.params || {};
   const restaurant = params.restaurant || { name: "N/A", location: "N/A", cuisine: "N/A", image: null };
   const selectedSlot = params.selectedSlot || "N/A";
-  const date = params.date ? new Date(params.date) : new Date(); // Convert back from string
+  const date = params.date ? new Date(params.date) : new Date();
+
+  useEffect(() => {
+    const saveBooking = async () => {
+      try {
+        const userDetails = await AsyncStorage.getItem("userDetails");
+        if (!userDetails) return;
+
+        const { email } = JSON.parse(userDetails);
+        const existingBookings = await AsyncStorage.getItem(`bookings_${email}`);
+        const bookings = existingBookings ? JSON.parse(existingBookings) : [];
+
+        const newBooking = {
+          restaurant,
+          selectedSlot,
+          date: date.toISOString(),
+        };
+
+        bookings.push(newBooking);
+        await AsyncStorage.setItem(`bookings_${email}`, JSON.stringify(bookings));
+      } catch (error) {
+        console.error("Error saving booking:", error);
+      }
+    };
+
+    saveBooking();
+  }, []);
 
   return (
     <View style={styles.container}>

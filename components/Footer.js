@@ -1,12 +1,33 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { FontAwesome, Entypo, Ionicons } from "@expo/vector-icons"; // ✅ Removed FontAwesome5 (no longer needed)
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome, Entypo, Ionicons } from "@expo/vector-icons";
 
 const Footer = () => {
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState("Home"); // ✅ Set default active tab as "Home"
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ Track login state
+  const [activeTab, setActiveTab] = useState("Home");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const userDetails = await AsyncStorage.getItem("userDetails");
+      setIsLoggedIn(!!userDetails);
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  const handlePress = async (item) => {
+    setActiveTab(item.route);
+
+    if (item.route === "Login") {
+      setIsLoggedIn(true);
+      navigation.navigate("Login");
+    } else {
+      navigation.navigate(item.route);
+    }
+  };
 
   const menuItems = [
     { label: "Home", icon: "home", route: "Home", lib: FontAwesome },
@@ -20,21 +41,6 @@ const Footer = () => {
       lib: Ionicons,
     },
   ];
-
-  const handlePress = (item) => {
-    setActiveTab(item.route);
-
-    if (item.route === "Login") {
-      // Simulating successful login
-      setIsLoggedIn(true);
-      navigation.navigate("Login");
-    } else if (item.route === "Profile") {
-      // ✅ Now correctly navigates to Profile screen
-      navigation.navigate("Profile");
-    } else {
-      navigation.navigate(item.route);
-    }
-  };
 
   return (
     <View style={styles.footer}>
@@ -82,7 +88,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    transition: "all 0.3s ease-in-out",
   },
   activeMenuItem: {
     borderBottomWidth: 3,
@@ -91,9 +96,8 @@ const styles = StyleSheet.create({
   },
   menuText: {
     marginTop: 5,
-    fontSize: 8,
+    fontSize: 10,
     color: "#B0B0B0",
-    // fontFamily: "Roboto-Regular",
   },
   activeMenuText: {
     color: "#007BFF",

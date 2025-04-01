@@ -30,7 +30,7 @@ const Profile = ({ onClose }) => {
         fetchUserDetails();
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         Alert.alert(
             'Log Out',
             'Are you sure you want to log out?',
@@ -39,15 +39,26 @@ const Profile = ({ onClose }) => {
                 {
                     text: 'Log Out',
                     style: 'destructive',
-                    onPress: () => {
-                        setLoggedOut(true);
-                        if (onClose) onClose();
-                        navigation.navigate('Home');
+                    onPress: async () => {
+                        try {
+                            await AsyncStorage.removeItem('userDetails'); 
+                            setUser({});
+                            setProfileImage(null);
+                            setLoggedOut(true);
+                            if (onClose) onClose();
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'Home' }], 
+                            });
+                        } catch (error) {
+                            console.error('Error logging out:', error);
+                        }
                     },
                 },
             ]
         );
     };
+    
 
     const handleImageChange = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
